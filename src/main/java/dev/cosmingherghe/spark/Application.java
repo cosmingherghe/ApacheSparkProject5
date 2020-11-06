@@ -76,5 +76,64 @@ public class Application {
         /*
         Continue using 3 new files: purchases.csv , products.csv & customers.csv
          */
+        String purchasesFile = "src/main/resources/purchases.csv";
+
+        Dataset<Row> purchasesDf = spark.read().format("csv")
+                .option("inferSchema", "true") // Make sure to use string version of true
+                .option("header", true)
+                .load(purchasesFile);
+
+
+        String productsFile = "src/main/resources/products.csv";
+
+        Dataset<Row> productsDf = spark.read().format("csv")
+                .option("inferSchema", "true") // Make sure to use string version of true
+                .option("header", true)
+                .load(productsFile);
+
+
+        String customersFile = "src/main/resources/customers.csv";
+
+        Dataset<Row> customersDf = spark.read().format("csv")
+                .option("inferSchema", "true") // Make sure to use string version of true
+                .option("header", true)
+                .load(customersFile);
+
+        System.out.println("\n\n\n\n\n Continue using: purchases.csv , products.csv & customers.csv files\n\n\n");
+        Dataset<Row> joinedData = customersDf.join(purchasesDf,
+                customersDf.col("customer_id").equalTo(purchasesDf.col("customer_id")))
+                .join(productsDf, purchasesDf.col("product_id").equalTo(productsDf.col("product_id")));
+
+        //show combined data frame
+        joinedData.show();
+
+        //dropping some data
+        Dataset<Row> cleanJoinedData = joinedData
+                .drop("favorite_website")
+                .drop(purchasesDf.col("customer_id"))
+                .drop(purchasesDf.col("product_id"))
+                .drop("product_id");
+
+        System.out.println("\n\n\nShow cleaned data frame");
+        cleanJoinedData.show();
+
+        // Playing with some SQL aggregate functions
+        System.out.println("Show the first name and the amount of purchases that they made.");
+        cleanJoinedData.groupBy("first_name").count().show();
+
+        System.out.println("GroupBy a column \"first_name\" show: count, max, sum using static org.apache.spark.sql.functions.*; ");
+        cleanJoinedData.groupBy("first_name").agg(
+                count("product_name").as("number_of_purchases"),
+                max("product_price").as("most_expensive"),
+                sum("product_price").as("total_spent")
+        ).show();
+
+        System.out.println("GroupBy column \"first_name\" & \"product_name\" show: count, max, sum using static org.apache.spark.sql.functions.*; ");
+        cleanJoinedData.groupBy("first_name", "product_name").agg(
+                count("product_name").as("number_of_purchases"),
+                max("product_price").as("most_expensive"),
+                sum("product_price").as("total_spent")
+        ).show();
+
     }
 }
