@@ -71,5 +71,10 @@ public class Application {
                 .select("student_name",
                         "favorite_book_title",
                         "letter_grade").show();
+
+
+        /*
+        Continue using 3 new files: purchases.csv , products.csv & customers.csv
+         */
     }
 }
